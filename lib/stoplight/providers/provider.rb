@@ -5,10 +5,10 @@ require 'httparty'
 require 'rack/commonlogger'
 require 'uri'
 
-unless $logger
-  require 'logger'
-  $logger = Logger.new('log/application.log')
-end
+#unless $logger
+#  require 'logger'
+#  $logger = Logger.new('log/application.log')
+#end
 
 # Provider is an abstract class that all providers inherit from. It requires that a specified format be returned. This way, stoplight
 # doesn't care who it's talking to, as long as it guarantees certain information.
