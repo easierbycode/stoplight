@@ -10,6 +10,7 @@ gem 'rspec'
 gem 'sinatra'
 gem 'time-lord'
 gem 'rabl'
+gem 'nokogiri'
 
 group :development do
   gem 'growl'

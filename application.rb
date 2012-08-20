@@ -46,27 +46,62 @@ end
 
 private
 # Load the servers and projects from the YAML file
+#def load_projects
+#  @servers ||= YAML::load(File.read('config/servers.yml'))
+#
+#  @projects = @servers.collect do |server|
+#    server_projects = get_server(server).projects
+#
+#    # if server['projects'] is defined, we only want those projects
+#    if server['projects']
+#      regexes = collect_regexes(server['projects'])
+#      server_projects.select { |server_project|
+#        regexes.any?{ |regex| server_project.name =~ regex }
+#      }
+#    elsif server['ignored_projects']
+#      regexes = collect_regexes(server['ignored_projects'])
+#      server_projects.reject { |server_project|
+#        regexes.any?{ |regex| server_project.name =~ regex }
+#      }
+#    else
+#      server_projects
+#    end
+#  end.compact.flatten
+#end
+
+def with_zero n
+  (n > 10) ? n : "0#{n}"
+end
+
 def load_projects
-  @servers ||= YAML::load(File.read('config/servers.yml'))
+  page = Nokogiri::HTML(open('http://174.77.67.250:8080/externalStatus.html'))
+  @projects = []
+  @buildTypeName = ''
 
-  @projects = @servers.collect do |server|
-    server_projects = get_server(server).projects
-
-    # if server['projects'] is defined, we only want those projects
-    if server['projects']
-      regexes = collect_regexes(server['projects'])
-      server_projects.select { |server_project|
-        regexes.any?{ |regex| server_project.name =~ regex }
-      }
-    elsif server['ignored_projects']
-      regexes = collect_regexes(server['ignored_projects'])
-      server_projects.reject { |server_project|
-        regexes.any?{ |regex| server_project.name =~ regex }
-      }
-    else
-      server_projects
+  page.css('tr').each do |tr|
+    if tr.at_css('.projectName')
+      @buildTypeName = tr.css('.projectName').first.content
     end
-  end.compact.flatten
+    if tr.at_css('.buildConfigurationName')
+      project = {}
+
+      project[:name] = tr.css('.buildConfigurationName').first.content.strip + " (#{@buildTypeName})"
+      project[:build_url] = tr.css('.buildTypeName').first['href']
+      project[:last_build_id] = tr.css('.teamCityBuildNumber a').first.content.delete('#').to_i
+      dt_str = tr.css('.date').first.content
+      dt = Date._parse(dt_str)
+      project[:last_build_time] = "#{dt[:year]}-#{with_zero(dt[:mon])}-#{with_zero(dt[:mday])}T#{with_zero(dt[:hour])}:#{with_zero(dt[:min])}:00Z"
+      if /error.gif/ =~ tr.css('img').first['src']
+        project[:last_build_status] = 1
+        project[:current_status] = 0
+      else
+        project[:last_build_status] = 0
+        project[:current_status] = 0
+      end
+
+      @projects.push Stoplight::Project.new(project)
+    end
+  end
 end
 
 def collect_regexes(projects)
