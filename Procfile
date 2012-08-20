@@ -1,2 +1,2 @@
-web:      shotgun -p 4567 -s puma
+web:      bundle exec puma -t 1:4 -b tcp://0.0.0.0:$PORT
 guard:    guard
