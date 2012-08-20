@@ -2,7 +2,7 @@
 # This is a base provider that all providers must inherit from
 #
 require 'httparty'
-require 'rack/commonlogger'
+#require 'rack/commonlogger'
 require 'uri'
 
 #unless $logger
@@ -85,11 +85,11 @@ module Stoplight::Providers
       if [200, 301, 302].include?(response.code)
         return response
       else
-        $logger.error "Response code for #{url} was #{response.code}"
+        #$logger.error "Response code for #{url} was #{response.code}"
         nil
       end
     rescue Exception => e
-      $logger.error "#{e.to_s}: `#{url}`"
+      #$logger.error "#{e.to_s}: `#{url}`"
       nil
     end
   end
